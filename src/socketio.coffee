@@ -1,10 +1,10 @@
 {Adapter,TextMessage} = require 'hubot'
 
-port = parseInt process.env.HUBOT_SOCKETIO_PORT or 9090
+port = parseInt process.env.PORT or 9090
 
 io = require('socket.io').listen port
 
-if process.env.HEROKU_URL 
+if process.env.HEROKU_URL
   io.configure ->
     io.set "transports", ["xhr-polling"]
     io.set "polling-duration", 10
