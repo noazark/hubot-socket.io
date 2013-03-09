@@ -1,6 +1,6 @@
-{Adapter,TextMessage} = require 'hubot'
+{Adapter,TextMessage,ObjectMessage} = require 'hubot'
 
-port = parseInt process.env.PORT or 9090
+port = parseInt process.env.HUBOT_SOCKETIO_PORT or 9090
 
 io = require('socket.io').listen port
 
@@ -15,12 +15,15 @@ class SocketIO extends Adapter
     @sockets = {}
     super @robot
 
-  send: (user, strings...) ->
-    socket = @sockets[user.id]
-    socket.emit 'message', str for str in strings
+  send: (envelope, strings...) ->
+    socket = @sockets[envelope.user.id]
+    if typeof envelope.message.text == "string"
+      socket.emit 'message', str for str in strings
+    else
+      socket.emit 'message', {response: str, requestId: envelope.message.id} for str in strings
 
-  reply: (user, strings...) ->
-    socket = @sockets[user.id]
+  reply: (envelope, strings...) ->
+    socket = @sockets[envelope.user.id]
     for str in strings
       socket.emit 'message', "#{user.name}: #{str}"
 
@@ -30,7 +33,10 @@ class SocketIO extends Adapter
 
       socket.on 'message', (message) =>
         user = @userForId socket.id, name: 'Try Hubot', room: socket.id
-        @receive new TextMessage user, message
+        if typeof message == "string"
+          @receive new TextMessage(user, message)
+        else
+          @receive new ObjectMessage(user, message, message.id)
 
       socket.on 'disconnect', =>
         delete @sockets[socket.id]
