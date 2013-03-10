@@ -1,6 +1,6 @@
 {Adapter,TextMessage} = require 'hubot'
 
-port = parseInt process.env.HUBOT_SOCKETIO_PORT or 9090
+port = parseInt process.env.PORT or 9090
 
 io = require('socket.io').listen port
 
